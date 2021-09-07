@@ -1,6 +1,4 @@
 from ikomia import dataprocess
-import Detectron2_RetinaNet_process as processMod
-import Detectron2_RetinaNet_widget as widgetMod
 
 
 # --------------------
@@ -13,9 +11,11 @@ class Detectron2_RetinaNet(dataprocess.CPluginProcessInterface):
         dataprocess.CPluginProcessInterface.__init__(self)
 
     def getProcessFactory(self):
+        from Detectron2_RetinaNet.Detectron2_RetinaNet_process import Detectron2_RetinaNetProcessFactory
         # Instantiate process object
-        return processMod.Detectron2_RetinaNetProcessFactory()
+        return Detectron2_RetinaNetProcessFactory()
 
     def getWidgetFactory(self):
+        from Detectron2_RetinaNet.Detectron2_RetinaNet_widget import Detectron2_RetinaNetWidgetFactory
         # Instantiate associated widget object
-        return widgetMod.Detectron2_RetinaNetWidgetFactory()
+        return Detectron2_RetinaNetWidgetFactory()
