@@ -120,11 +120,11 @@ class Detectron2_RetinaNetProcess(dataprocess.C2dImageTask):
         classes = outputs["instances"].pred_classes
 
         # to numpy
-        if param.cuda :
+        if param.cuda:
             boxes_np = boxes.tensor.cpu().numpy()
             scores_np = scores.cpu().numpy()
             classes_np = classes.cpu().numpy()
-        else :
+        else:
             boxes_np = boxes.tensor.numpy()
             scores_np = scores.numpy()
             classes_np = classes.numpy()
@@ -151,14 +151,15 @@ class Detectron2_RetinaNetProcess(dataprocess.C2dImageTask):
 
             # Show Boxes + labels 
             for i in range(len(scores_np_tresh)):
-                color = [random.randint(0,255), random.randint(0,255), random.randint(0,255), 255]
-                properties_text = core.GraphicsTextProperty()
-                properties_text.color = color
-                properties_text.font_size = 7
-                properties_rect = core.GraphicsRectProperty()
-                properties_rect.pen_color = color
-                output_graph.addRectangle(float(boxes_np[i][0]), float(boxes_np[i][1]), float(boxes_np[i][2] - boxes_np[i][0]), float(boxes_np[i][3] - boxes_np[i][1]), properties_rect)
-                output_graph.addText(labels[i],float(boxes_np[i][0]), float(boxes_np[i][1]),properties_text)
+                color = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), 255]
+                prop_text = core.GraphicsTextProperty()
+                prop_text.color = color
+                prop_text.font_size = 7
+                output_graph.addText(labels[i], float(boxes_np[i][0]), float(boxes_np[i][1]), prop_text)
+                prop_rect = core.GraphicsRectProperty()
+                prop_rect.pen_color = color
+                prop_rect.category = labels[i]
+                output_graph.addRectangle(float(boxes_np[i][0]), float(boxes_np[i][1]), float(boxes_np[i][2] - boxes_np[i][0]), float(boxes_np[i][3] - boxes_np[i][1]), prop_rect)
 
         # Step progress bar:
         self.emitStepProgress()
