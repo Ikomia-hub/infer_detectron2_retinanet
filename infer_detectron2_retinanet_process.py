@@ -1,4 +1,4 @@
-from Detectron2_RetinaNet import update_path
+from infer_detectron2_retinanet import update_path
 from ikomia import core, dataprocess
 import copy
 from detectron2 import model_zoo
@@ -12,7 +12,7 @@ import random
 # - Class to handle the process parameters
 # - Inherits core.CProtocolTaskParam from Ikomia API
 # --------------------
-class Detectron2_RetinaNetParam(core.CWorkflowTaskParam):
+class RetinanetParam(core.CWorkflowTaskParam):
 
     def __init__(self):
         core.CWorkflowTaskParam.__init__(self)
@@ -34,14 +34,14 @@ class Detectron2_RetinaNetParam(core.CWorkflowTaskParam):
 # - Class which implements the process
 # - Inherits core.CProtocolTask or derived from Ikomia API
 # --------------------
-class Detectron2_RetinaNetProcess(dataprocess.C2dImageTask):
+class Retinanet(dataprocess.C2dImageTask):
 
     def __init__(self, name, param):
         dataprocess.C2dImageTask.__init__(self, name)
 
         # Create parameters class
         if param is None:
-            self.setParam(Detectron2_RetinaNetParam())
+            self.setParam(RetinanetParam())
         else:
             self.setParam(copy.deepcopy(param))
 
@@ -172,12 +172,12 @@ class Detectron2_RetinaNetProcess(dataprocess.C2dImageTask):
 # - Factory class to build process object
 # - Inherits dataprocess.CProcessFactory from Ikomia API
 # --------------------
-class Detectron2_RetinaNetProcessFactory(dataprocess.CTaskFactory):
+class RetinanetFactory(dataprocess.CTaskFactory):
 
     def __init__(self):
         dataprocess.CTaskFactory.__init__(self)
         # Set process information as string here
-        self.info.name = "Detectron2_RetinaNet"
+        self.info.name = "infer_detectron2_retinanet"
         self.info.shortDescription = "RetinaNet inference model of Detectron2 for object detection."
         self.info.description = "RetinaNet inference model for object detection trained on COCO. " \
                                 "Implementation from Detectron2 (Facebook Research). " \
@@ -197,4 +197,4 @@ class Detectron2_RetinaNetProcessFactory(dataprocess.CTaskFactory):
 
     def create(self, param=None):
         # Create process object
-        return Detectron2_RetinaNetProcess(self.info.name, param)
+        return Retinanet(self.info.name, param)

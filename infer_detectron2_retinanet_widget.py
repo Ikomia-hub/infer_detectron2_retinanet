@@ -1,6 +1,6 @@
 from ikomia import utils, core, dataprocess
 from ikomia.utils import qtconversion
-from Detectron2_RetinaNet.Detectron2_RetinaNet_process import Detectron2_RetinaNetParam
+from infer_detectron2_retinanet.infer_detectron2_retinanet_process import RetinanetParam
 # PyQt GUI framework
 from PyQt5.QtWidgets import *
 
@@ -9,13 +9,13 @@ from PyQt5.QtWidgets import *
 # - Class which implements widget associated with the process
 # - Inherits core.CProtocolTaskWidget from Ikomia API
 # --------------------
-class Detectron2_RetinaNetWidget(core.CWorkflowTaskWidget):
+class RetinanetWidget(core.CWorkflowTaskWidget):
 
     def __init__(self, param, parent):
         core.CWorkflowTaskWidget.__init__(self, parent)
 
         if param is None:
-            self.parameters = Detectron2_RetinaNetParam()
+            self.parameters = RetinanetParam()
         else:
             self.parameters = param
 
@@ -66,13 +66,13 @@ class Detectron2_RetinaNetWidget(core.CWorkflowTaskWidget):
 # - Factory class to build process widget object
 # - Inherits dataprocess.CWidgetFactory from Ikomia API
 # --------------------
-class Detectron2_RetinaNetWidgetFactory(dataprocess.CWidgetFactory):
+class RetinanetWidgetFactory(dataprocess.CWidgetFactory):
 
     def __init__(self):
         dataprocess.CWidgetFactory.__init__(self)
         # Set the name of the process -> it must be the same as the one declared in the process factory class
-        self.name = "Detectron2_RetinaNet"
+        self.name = "infer_detectron2_retinanet"
 
     def create(self, param):
         # Create widget object
-        return Detectron2_RetinaNetWidget(param, None)
+        return RetinanetWidget(param, None)
