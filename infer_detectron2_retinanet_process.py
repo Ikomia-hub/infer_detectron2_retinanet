@@ -6,6 +6,7 @@ from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog
 import random
+import numpy as np
 
 
 # --------------------
@@ -56,10 +57,10 @@ class Retinanet(dataprocess.C2dImageTask):
         self.cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(self.LINK_MODEL)
         self.loaded = False
         self.deviceFrom = ""
+        self.predictor = None
 
         # add output
-        self.addOutput(dataprocess.CGraphicsOutput())
-        self.addOutput(dataprocess.CBlobMeasureIO())
+        self.addOutput(dataprocess.CObjectDetectionIO())
 
     def getProgressSteps(self, eltCount=1):
         # Function returning the number of progress steps for this process
@@ -70,7 +71,7 @@ class Retinanet(dataprocess.C2dImageTask):
         self.beginTaskRun()
 
         # we use seed to keep the same color for our masks + boxes + labels (same random each time)
-        random.seed(30)
+        random.seed(10)
 
         # Get input :
         img_input = self.getInput(0)
@@ -78,9 +79,8 @@ class Retinanet(dataprocess.C2dImageTask):
 
         # Get output :
         output_image = self.getOutput(0)
-        output_graph = self.getOutput(1)
-        output_graph.setNewLayer("Detectron2_RetinaNet")
-        output_measure = self.getOutput(2)
+        output_obj_detect = self.getOutput(1)
+        output_obj_detect.init("Detectron2_RetinaNet", 0)
 
         # Get parameters :
         param = self.getParam()
@@ -120,72 +120,34 @@ class Retinanet(dataprocess.C2dImageTask):
             self.predictor = DefaultPredictor(self.cfg)
         
         outputs = self.predictor(src_image)
+        class_names = MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]).get("thing_classes")
 
         # get outputs instances
         output_image.setImage(src_image)
         boxes = outputs["instances"].pred_boxes
         scores = outputs["instances"].scores
         classes = outputs["instances"].pred_classes
-
-        # to numpy
-        if param.cuda:
-            boxes_np = boxes.tensor.cpu().numpy()
-            scores_np = scores.cpu().numpy()
-            classes_np = classes.cpu().numpy()
-        else:
-            boxes_np = boxes.tensor.numpy()
-            scores_np = scores.numpy()
-            classes_np = classes.numpy()
-
         self.emitStepProgress()
-        
-        # keep only the results with proba > threshold
-        scores_np_thresh = list()
-        for s in scores_np:
-            if float(s) > param.proba:
-                scores_np_thresh.append(s)
 
-        if len(scores_np_thresh) > 0:
-            # text label with score
-            labels = None
-            class_names = MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]).get("thing_classes")
-            if classes is not None and class_names is not None and len(class_names) > 1:
-                labels = [class_names[i] for i in classes]
+        # create random color for masks + boxes + labels
+        np.random.seed(10)
+        colors = [[0, 0, 0]]
+        for i in range(len(class_names)):
+            colors.append([random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), 255])
 
-            if scores_np_thresh is not None and labels is None:
-                labels = ["{:.0f}%".format(s * 100) for s in scores_np_thresh]
+        # Show boxes + labels + data
+        index = 0
+        for box, score, cls in zip(boxes, scores, classes):
+            if score > param.proba:
+                x1, y1, x2, y2 = box.cpu().numpy()
+                w = float(x2 - x1)
+                h = float(y2 - y1)
+                cls = int(cls.cpu().numpy())
+                output_obj_detect.addObject(index, class_names[cls], float(score),
+                                            float(x1), float(y1), w, h, colors[cls + 1])
+            index += 1
 
-            # Show Boxes + labels 
-            for i in range(len(scores_np_thresh)):
-                color = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), 255]
-                box_x = float(boxes_np[i][0])
-                box_y = float(boxes_np[i][1])
-                box_w = float(boxes_np[i][2] - boxes_np[i][0])
-                box_h = float(boxes_np[i][3] - boxes_np[i][1])
-                # label
-                prop_text = core.GraphicsTextProperty()
-                prop_text.color = color
-                prop_text.font_size = 8
-                prop_text.bold = True
-                output_graph.addText("{} {:.0f}%".format(labels[i], scores_np_thresh[i]*100), box_x, box_y, prop_text)
-                # box
-                prop_rect = core.GraphicsRectProperty()
-                prop_rect.pen_color = color
-                prop_rect.category = labels[i]
-                graphics_obj = output_graph.addRectangle(box_x, box_y, box_w, box_h, prop_rect)
-                # object results
-                results = []
-                confidence_data = dataprocess.CObjectMeasure(dataprocess.CMeasure(core.MeasureId.CUSTOM, "Confidence"),
-                                                             float(scores_np_thresh[i]),
-                                                             graphics_obj.getId(),
-                                                             labels[i])
-                box_data = dataprocess.CObjectMeasure(dataprocess.CMeasure(core.MeasureId.BBOX),
-                                                      [box_x, box_y, box_w, box_h],
-                                                      graphics_obj.getId(),
-                                                      labels[i])
-                results.append(confidence_data)
-                results.append(box_data)
-                output_measure.addObjectMeasures(results)
+        self.forwardInputImage(0, 0)
 
         # Step progress bar:
         self.emitStepProgress()
@@ -216,9 +178,9 @@ class RetinanetFactory(dataprocess.CTaskFactory):
         self.info.license = "Apache-2.0 License"
         self.info.documentationLink = "https://detectron2.readthedocs.io/index.html"
         self.info.repo = "https://github.com/facebookresearch/detectron2"
-        self.info.path = "Plugins/Python/Detectron2"
+        self.info.path = "Plugins/Python/Detection"
         self.info.iconPath = "icons/detectron2.png"
-        self.info.version = "1.1.0"
+        self.info.version = "1.2.0"
         self.info.keywords = "object,facebook,detectron2,detection"
 
     def create(self, param=None):
