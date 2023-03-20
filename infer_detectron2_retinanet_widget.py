@@ -47,19 +47,19 @@ class RetinanetWidget(core.CWorkflowTaskWidget):
 
         # Set widget layout
         layout_ptr = qtconversion.PyQtToQt(self.gridLayout)
-        self.setLayout(layout_ptr)
+        self.set_layout(layout_ptr)
 
         if not self.parameters.cuda:
             self.cuda_ckeck.setChecked(False)
 
-    def onApply(self):
+    def on_apply(self):
         # Apply button clicked slot
         if self.cuda_ckeck.isChecked():
             self.parameters.cuda = True
         else:
             self.parameters.cuda = False
         self.parameters.proba = self.proba_spinbox.value()
-        self.emitApply(self.parameters)
+        self.emit_apply(self.parameters)
 
 
 # --------------------

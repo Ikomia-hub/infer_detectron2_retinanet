@@ -20,12 +20,12 @@ class RetinanetParam(core.CWorkflowTaskParam):
         self.cuda = True
         self.proba = 0.8
 
-    def setParamMap(self, param_map):
+    def set_values(self, param_map):
         self.cuda = int(param_map["cuda"])
         self.proba = int(param_map["proba"])
 
-    def getParamMap(self):
-        param_map = core.ParamMap()
+    def get_values(self):
+        param_map = {}
         param_map["cuda"] = str(self.cuda)
         param_map["proba"] = str(self.proba)
         return param_map
@@ -35,16 +35,16 @@ class RetinanetParam(core.CWorkflowTaskParam):
 # - Class which implements the process
 # - Inherits core.CProtocolTask or derived from Ikomia API
 # --------------------
-class Retinanet(dataprocess.C2dImageTask):
+class Retinanet(dataprocess.CObjectDetectionTask):
 
     def __init__(self, name, param):
-        dataprocess.C2dImageTask.__init__(self, name)
+        dataprocess.CObjectDetectionTask.__init__(self, name)
 
         # Create parameters class
         if param is None:
-            self.setParam(RetinanetParam())
+            self.set_param_object(RetinanetParam())
         else:
-            self.setParam(copy.deepcopy(param))
+            self.set_param_object(copy.deepcopy(param))
 
         # get and set config model
         self.LINK_MODEL = "COCO-Detection/retinanet_R_101_FPN_3x.yaml"
@@ -59,31 +59,26 @@ class Retinanet(dataprocess.C2dImageTask):
         self.deviceFrom = ""
         self.predictor = None
 
-        # add output
-        self.addOutput(dataprocess.CObjectDetectionIO())
-
-    def getProgressSteps(self, eltCount=1):
+    def get_progress_steps(self, eltCount=1):
         # Function returning the number of progress steps for this process
         # This is handled by the main progress bar of Ikomia application
         return 2
 
     def run(self):
-        self.beginTaskRun()
+        self.begin_task_run()
 
         # we use seed to keep the same color for our masks + boxes + labels (same random each time)
         random.seed(10)
 
         # Get input :
-        img_input = self.getInput(0)
-        src_image = img_input.getImage()
+        img_input = self.get_input(0)
+        src_image = img_input.get_image()
 
         # Get output :
-        output_image = self.getOutput(0)
-        output_obj_detect = self.getOutput(1)
-        output_obj_detect.init("Detectron2_RetinaNet", 0)
+        output_image = self.get_output(0)
 
         # Get parameters :
-        param = self.getParam()
+        param = self.get_param_object()
 
         # predictor
         if not self.loaded:
@@ -122,12 +117,14 @@ class Retinanet(dataprocess.C2dImageTask):
         outputs = self.predictor(src_image)
         class_names = MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]).get("thing_classes")
 
+        self.set_names(class_names)
+
         # get outputs instances
-        output_image.setImage(src_image)
+        output_image.set_image(src_image)
         boxes = outputs["instances"].pred_boxes
         scores = outputs["instances"].scores
         classes = outputs["instances"].pred_classes
-        self.emitStepProgress()
+        self.emit_step_progress()
 
         # create random color for masks + boxes + labels
         np.random.seed(10)
@@ -143,17 +140,17 @@ class Retinanet(dataprocess.C2dImageTask):
                 w = float(x2 - x1)
                 h = float(y2 - y1)
                 cls = int(cls.cpu().numpy())
-                output_obj_detect.addObject(index, class_names[cls], float(score),
-                                            float(x1), float(y1), w, h, colors[cls + 1])
+                self.add_object(index, cls, float(score),
+                                            float(x1), float(y1), w, h)
             index += 1
 
-        self.forwardInputImage(0, 0)
+        self.forward_input_image(0, 0)
 
         # Step progress bar:
-        self.emitStepProgress()
+        self.emit_step_progress()
 
-        # Call endTaskRun to finalize process
-        self.endTaskRun()
+        # Call end_task_run to finalize process
+        self.end_task_run()
 
 
 # --------------------
@@ -166,7 +163,7 @@ class RetinanetFactory(dataprocess.CTaskFactory):
         dataprocess.CTaskFactory.__init__(self)
         # Set process information as string here
         self.info.name = "infer_detectron2_retinanet"
-        self.info.shortDescription = "RetinaNet inference model of Detectron2 for object detection."
+        self.info.short_description = "RetinaNet inference model of Detectron2 for object detection."
         self.info.description = "RetinaNet inference model for object detection trained on COCO. " \
                                 "Implementation from Detectron2 (Facebook Research). " \
                                 "This Ikomia plugin can make inference of pre-trained model " \
@@ -176,11 +173,11 @@ class RetinanetFactory(dataprocess.CTaskFactory):
         self.info.journal = "IEEE International Conference on Computer Vision (ICCV)"
         self.info.year = 2017
         self.info.license = "Apache-2.0 License"
-        self.info.documentationLink = "https://detectron2.readthedocs.io/index.html"
+        self.info.documentation_link = "https://detectron2.readthedocs.io/index.html"
         self.info.repo = "https://github.com/facebookresearch/detectron2"
         self.info.path = "Plugins/Python/Detection"
-        self.info.iconPath = "icons/detectron2.png"
-        self.info.version = "1.2.0"
+        self.info.icon_path = "icons/detectron2.png"
+        self.info.version = "1.3.0"
         self.info.keywords = "object,facebook,detectron2,detection"
 
     def create(self, param=None):
