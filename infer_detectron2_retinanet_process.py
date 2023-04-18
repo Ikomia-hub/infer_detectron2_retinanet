@@ -18,16 +18,16 @@ class RetinanetParam(core.CWorkflowTaskParam):
     def __init__(self):
         core.CWorkflowTaskParam.__init__(self)
         self.cuda = True
-        self.proba = 0.8
+        self.conf_tresh = 0.8
 
     def set_values(self, param_map):
         self.cuda = int(param_map["cuda"])
-        self.proba = int(param_map["proba"])
+        self.conf_tresh = int(param_map["conf_tresh"])
 
     def get_values(self):
         param_map = {}
         param_map["cuda"] = str(self.cuda)
-        param_map["proba"] = str(self.proba)
+        param_map["conf_tresh"] = str(self.conf_tresh)
         return param_map
 
 
@@ -90,7 +90,7 @@ class Retinanet(dataprocess.CObjectDetectionTask):
                 self.deviceFrom = "gpu"
             self.loaded = True
             self.predictor = DefaultPredictor(self.cfg)
-        # reload model if CUDA check and load without CUDA 
+        # reload model if CUDA check and load without CUDA
         elif self.deviceFrom == "cpu" and param.cuda:
             print("Chargement du modèle")
             self.cfg = get_cfg()
@@ -113,7 +113,7 @@ class Retinanet(dataprocess.CObjectDetectionTask):
             self.cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(self.LINK_MODEL)
             self.deviceFrom = "cpu"
             self.predictor = DefaultPredictor(self.cfg)
-        
+
         outputs = self.predictor(src_image)
         class_names = MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]).get("thing_classes")
 
@@ -130,12 +130,15 @@ class Retinanet(dataprocess.CObjectDetectionTask):
         np.random.seed(10)
         colors = [[0, 0, 0]]
         for i in range(len(class_names)):
-            colors.append([random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), 255])
+            colors.append([random.randint(0, 255),
+                           random.randint(0, 255),
+                           random.randint(0, 255),
+                           255])
 
         # Show boxes + labels + data
         index = 0
         for box, score, cls in zip(boxes, scores, classes):
-            if score > param.proba:
+            if score > param.conf_tresh:
                 x1, y1, x2, y2 = box.cpu().numpy()
                 w = float(x2 - x1)
                 h = float(y2 - y1)
