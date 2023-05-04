@@ -1,5 +1,5 @@
 from infer_detectron2_retinanet import update_path
-from ikomia import core, dataprocess
+from ikomia import utils, core, dataprocess
 import copy
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
@@ -18,16 +18,17 @@ class RetinanetParam(core.CWorkflowTaskParam):
     def __init__(self):
         core.CWorkflowTaskParam.__init__(self)
         self.cuda = True
-        self.conf_tresh = 0.8
+        self.conf_thresh = 0.8
 
     def set_values(self, param_map):
-        self.cuda = int(param_map["cuda"])
-        self.conf_tresh = int(param_map["conf_tresh"])
+        self.cuda = utils.strtobool(param_map["cuda"])
+        self.conf_thresh = float(param_map["conf_thresh"])
 
     def get_values(self):
-        param_map = {}
-        param_map["cuda"] = str(self.cuda)
-        param_map["conf_tresh"] = str(self.conf_tresh)
+        param_map = {
+            "cuda": str(self.cuda),
+            "conf_thresh": str(self.conf_thresh)
+        }
         return param_map
 
 
@@ -138,7 +139,7 @@ class Retinanet(dataprocess.CObjectDetectionTask):
         # Show boxes + labels + data
         index = 0
         for box, score, cls in zip(boxes, scores, classes):
-            if score > param.conf_tresh:
+            if score > param.conf_thresh:
                 x1, y1, x2, y2 = box.cpu().numpy()
                 w = float(x2 - x1)
                 h = float(y2 - y1)

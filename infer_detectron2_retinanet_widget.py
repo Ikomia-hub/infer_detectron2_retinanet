@@ -34,8 +34,8 @@ class RetinanetWidget(core.CWorkflowTaskWidget):
         self.proba_spinbox.setValue(0.8)
         self.proba_spinbox.setSingleStep(0.1)
         self.proba_spinbox.setMaximum(1)
-        if self.parameters.conf_tresh != 0.8:
-            self.proba_spinbox.setValue(self.parameters.conf_tresh)
+        if self.parameters.conf_thresh != 0.8:
+            self.proba_spinbox.setValue(self.parameters.conf_thresh)
 
         self.gridLayout.setColumnStretch(0,0)
         self.gridLayout.addWidget(self.cuda_ckeck, 0, 0)
@@ -58,7 +58,7 @@ class RetinanetWidget(core.CWorkflowTaskWidget):
             self.parameters.cuda = True
         else:
             self.parameters.cuda = False
-        self.parameters.conf_tresh = self.proba_spinbox.value()
+        self.parameters.conf_thresh = self.proba_spinbox.value()
         self.emit_apply(self.parameters)
 
 
