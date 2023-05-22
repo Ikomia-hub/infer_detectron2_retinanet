@@ -68,6 +68,9 @@ class Retinanet(dataprocess.CObjectDetectionTask):
     def run(self):
         self.begin_task_run()
 
+        # Temporary fix to clean detection outputs
+        self.get_output(1).clear_data()
+
         # we use seed to keep the same color for our masks + boxes + labels (same random each time)
         random.seed(10)
 
