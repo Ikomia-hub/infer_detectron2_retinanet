@@ -92,7 +92,6 @@ Every algorithm produces specific outputs, yet they can be explored them the sam
 
 ```python
 from ikomia.dataprocess.workflow import Workflow
-from ikomia.utils.displayIO import display
 
 # Init your workflow
 wf = Workflow()
@@ -104,7 +103,7 @@ detector = wf.add_task(name="infer_detectron2_retinanet", auto_connect=True)
 wf.run_on(url="https://raw.githubusercontent.com/Ikomia-hub/infer_detectron2_retinanet/main/images/example.jpg")
 
 # Iterate over outputs
-for output in algo.get_outputs()
+for output in detector.get_outputs():
     # Print information
     print(output)
     # Export it to JSON
