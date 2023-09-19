@@ -171,10 +171,6 @@ class RetinanetFactory(dataprocess.CTaskFactory):
         # Set process information as string here
         self.info.name = "infer_detectron2_retinanet"
         self.info.short_description = "RetinaNet inference model of Detectron2 for object detection."
-        self.info.description = "RetinaNet inference model for object detection trained on COCO. " \
-                                "Implementation from Detectron2 (Facebook Research). " \
-                                "This Ikomia plugin can make inference of pre-trained model " \
-                                "with ResNet101 backbone + FPN head."
         self.info.authors = "Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, Piotr Dollár"
         self.info.article = "Focal Loss for Dense Object Detection"
         self.info.journal = "IEEE International Conference on Computer Vision (ICCV)"
