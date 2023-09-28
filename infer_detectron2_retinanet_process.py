@@ -180,7 +180,8 @@ class RetinanetFactory(dataprocess.CTaskFactory):
         self.info.year = 2017
         self.info.license = "Apache-2.0 License"
         self.info.documentation_link = "https://detectron2.readthedocs.io/index.html"
-        self.info.repo = "https://github.com/facebookresearch/detectron2"
+        self.info.repository = "https://github.com/Ikomia-hub/infer_detectron2_retinanet"
+        self.info.original_repository = "https://github.com/facebookresearch/detectron2"
         self.info.path = "Plugins/Python/Detection"
         self.info.icon_path = "icons/detectron2.png"
         self.info.version = "1.3.0"
