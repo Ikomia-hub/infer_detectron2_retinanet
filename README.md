@@ -21,7 +21,7 @@
 
 Run object detection model RetinaNet from Detectron2 framework.
 
-![Example image](https://raw.githubusercontent.com/Ikomia-hub/infer_detectron2_retinanet/feat/new_readme/images/example-result.jpg)
+![Example image](https://raw.githubusercontent.com/Ikomia-hub/infer_detectron2_retinanet/main/images/example-result.jpg)
 
 ## :rocket: Use with Ikomia API
 
