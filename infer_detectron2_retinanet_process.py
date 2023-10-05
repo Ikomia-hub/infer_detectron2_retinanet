@@ -7,7 +7,8 @@ from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog
 import random
 import numpy as np
-
+import torch
+import os
 
 # --------------------
 # - Class to handle the process parameters
@@ -19,10 +20,12 @@ class RetinanetParam(core.CWorkflowTaskParam):
         core.CWorkflowTaskParam.__init__(self)
         self.cuda = True
         self.conf_thresh = 0.8
+        self.update = False
 
     def set_values(self, param_map):
         self.cuda = utils.strtobool(param_map["cuda"])
         self.conf_thresh = float(param_map["conf_thresh"])
+        self.update = True
 
     def get_values(self):
         param_map = {
@@ -88,37 +91,22 @@ class Retinanet(dataprocess.CObjectDetectionTask):
         os.environ["FVCORE_CACHE"] = os.path.join(os.path.dirname(__file__), "models")
 
         # predictor
-        if not self.loaded:
+        if param.update or self.predictor is None:
             print("Chargement du modèle")
-            if not param.cuda:
-                self.cfg.MODEL.DEVICE = "cpu"
-                self.deviceFrom = "cpu"
-            else:
+            if param.cuda and torch.cuda.is_available():
                 self.deviceFrom = "gpu"
-            self.loaded = True
-            self.predictor = DefaultPredictor(self.cfg)
-        # reload model if CUDA check and load without CUDA
-        elif self.deviceFrom == "cpu" and param.cuda:
-            print("Chargement du modèle")
+            else:
+                self.cfg.MODEL.DEVICE = "cpu"
+                self.deviceFrom = "cpu"              
+
+            print("Loading model")
             self.cfg = get_cfg()
             self.cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.threshold
             # load config from file(.yaml)
             self.cfg.merge_from_file(model_zoo.get_config_file(self.LINK_MODEL))
             # download the model (.pkl)
             self.cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(self.LINK_MODEL)
-            self.deviceFrom = "gpu"
-            self.predictor = DefaultPredictor(self.cfg)
-        # reload model if CUDA not check and load with CUDA
-        elif self.deviceFrom == "gpu" and not param.cuda:
-            print("Chargement du modèle")
-            self.cfg = get_cfg()
-            self.cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.threshold
-            self.cfg.MODEL.DEVICE = "cpu"
-            # load config from file(.yaml)
-            self.cfg.merge_from_file(model_zoo.get_config_file(self.LINK_MODEL))
-            # download the model (.pkl)
-            self.cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(self.LINK_MODEL)
-            self.deviceFrom = "cpu"
+            self.cfg.MODEL.DEVICE = 'cuda' if param.cuda and torch.cuda.is_available() else 'cpu'
             self.predictor = DefaultPredictor(self.cfg)
 
         outputs = self.predictor(src_image)

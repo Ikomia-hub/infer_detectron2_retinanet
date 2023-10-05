@@ -60,7 +60,7 @@ class RetinanetWidget(core.CWorkflowTaskWidget):
             self.parameters.cuda = False
         self.parameters.conf_thresh = self.proba_spinbox.value()
         self.emit_apply(self.parameters)
-
+        self.parameters.update = True
 
 # --------------------
 # - Factory class to build process widget object
