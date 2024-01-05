@@ -172,7 +172,7 @@ class RetinanetFactory(dataprocess.CTaskFactory):
         self.info.original_repository = "https://github.com/facebookresearch/detectron2"
         self.info.path = "Plugins/Python/Detection"
         self.info.icon_path = "icons/detectron2.png"
-        self.info.version = "1.3.0"
+        self.info.version = "1.3.1"
         self.info.keywords = "object,facebook,detectron2,detection"
         self.info.algo_type = core.AlgoType.INFER
         self.info.algo_tasks = "OBJECT_DETECTION"
