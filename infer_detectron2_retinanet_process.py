@@ -14,6 +14,8 @@ import os
 # - Class to handle the process parameters
 # - Inherits core.CProtocolTaskParam from Ikomia API
 # --------------------
+
+
 class RetinanetParam(core.CWorkflowTaskParam):
 
     def __init__(self):
@@ -88,7 +90,8 @@ class Retinanet(dataprocess.CObjectDetectionTask):
         param = self.get_param_object()
 
         # Set cache dir in the algorithm folder to simplify deployment
-        os.environ["FVCORE_CACHE"] = os.path.join(os.path.dirname(__file__), "models")
+        os.environ["FVCORE_CACHE"] = os.path.join(
+            os.path.dirname(__file__), "models")
 
         # predictor
         if param.update or self.predictor is None:
@@ -97,20 +100,23 @@ class Retinanet(dataprocess.CObjectDetectionTask):
                 self.deviceFrom = "gpu"
             else:
                 self.cfg.MODEL.DEVICE = "cpu"
-                self.deviceFrom = "cpu"              
+                self.deviceFrom = "cpu"
 
             print("Loading model")
             self.cfg = get_cfg()
             self.cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.threshold
             # load config from file(.yaml)
-            self.cfg.merge_from_file(model_zoo.get_config_file(self.LINK_MODEL))
+            self.cfg.merge_from_file(
+                model_zoo.get_config_file(self.LINK_MODEL))
             # download the model (.pkl)
-            self.cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(self.LINK_MODEL)
+            self.cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(
+                self.LINK_MODEL)
             self.cfg.MODEL.DEVICE = 'cuda' if param.cuda and torch.cuda.is_available() else 'cpu'
             self.predictor = DefaultPredictor(self.cfg)
 
         outputs = self.predictor(src_image)
-        class_names = MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]).get("thing_classes")
+        class_names = MetadataCatalog.get(
+            self.cfg.DATASETS.TRAIN[0]).get("thing_classes")
 
         self.set_names(class_names)
 
@@ -139,7 +145,7 @@ class Retinanet(dataprocess.CObjectDetectionTask):
                 h = float(y2 - y1)
                 cls = int(cls.cpu().numpy())
                 self.add_object(index, cls, float(score),
-                                            float(x1), float(y1), w, h)
+                                float(x1), float(y1), w, h)
             index += 1
 
         self.forward_input_image(0, 0)
@@ -172,7 +178,10 @@ class RetinanetFactory(dataprocess.CTaskFactory):
         self.info.original_repository = "https://github.com/facebookresearch/detectron2"
         self.info.path = "Plugins/Python/Detection"
         self.info.icon_path = "icons/detectron2.png"
-        self.info.version = "1.3.2"
+        self.info.version = "1.3.3"
+        # Python compatibility
+        self.info.min_python_version = "3.8.0"
+        self.info.min_ikomia_version = "0.13.0"
         self.info.keywords = "object,facebook,detectron2,detection"
         self.info.algo_type = core.AlgoType.INFER
         self.info.algo_tasks = "OBJECT_DETECTION"
